@@ -1,7 +1,7 @@
-<?
+<?php
 session_start();
-
-php include __DIR__ . '/../includes/site_header.php'; ?>
+include __DIR__ . '/../includes/site_header.php';
+?>
 
 <!-- Баннер -->
 
