@@ -9,7 +9,7 @@ if (!isset($_SESSION["user_id"]))
 }
 
 include __DIR__ . '/../includes/db.php';
-include __DIR__ . '/../"includes/site_header.php';
+include __DIR__ . '/../includes/site_header.php';
 
 $id = (int)$_GET["id"];
 
