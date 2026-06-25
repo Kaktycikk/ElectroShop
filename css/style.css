@@ -1,0 +1,192 @@
+body {
+    background-color: #f5f7fa;
+    font-family: Arial, sans-serif;
+}
+
+/* ===== SIDEBAR ===== */
+
+.sidebar {
+    background: #1c2430;
+    min-height: 100vh;
+    padding: 25px 20px;
+}
+
+.sidebar h4 {
+    color: white;
+    font-weight: 700;
+    margin-bottom: 35px;
+}
+
+.sidebar .nav-link {
+    color: #c7ced6;
+    padding: 12px 15px;
+    margin-bottom: 8px;
+    border-radius: 10px;
+    transition: 0.3s;
+}
+
+.sidebar .nav-link:hover {
+    background: #ff6b00;
+    color: white;
+}
+
+.sidebar .nav-link.active {
+    background: #ff6b00;
+    color: white;
+}
+
+/* ===== MAIN CONTENT ===== */
+
+.main-content {
+    padding: 30px;
+}
+
+/* ===== HERO BLOCK ===== */
+
+.dashboard-banner {
+    background: linear-gradient(135deg, #ff6b00, #ff8f00);
+    color: white;
+    padding: 40px;
+    border-radius: 20px;
+    margin-bottom: 30px;
+    box-shadow: 0 10px 25px rgba(0,0,0,.1);
+}
+
+.dashboard-banner h1 {
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.dashboard-banner p {
+    margin: 0;
+    opacity: 0.9;
+}
+
+/* ===== STAT CARDS ===== */
+
+.stat-card {
+    border: none;
+    border-radius: 18px;
+    overflow: hidden;
+    transition: .3s;
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+}
+
+.stat-card .card-body {
+    padding: 25px;
+}
+
+.stat-card h6 {
+    color: #666;
+    margin-bottom: 10px;
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #ff6b00;
+}
+
+/* ===== SECTION TITLES ===== */
+
+.section-title {
+    margin-top: 40px;
+    margin-bottom: 20px;
+    font-weight: 700;
+    color: #1c2430;
+}
+
+/* ===== TABLES ===== */
+
+.table-wrapper {
+    background: white;
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 5px 20px rgba(0,0,0,.08);
+}
+
+.table {
+    margin: 0;
+}
+
+.table thead {
+    background: #f8f9fb;
+}
+
+.table th {
+    border: none;
+    padding: 18px;
+    font-weight: 600;
+}
+
+.table td {
+    padding: 18px;
+    vertical-align: middle;
+}
+
+/* ===== STATUS BADGES ===== */
+
+.status-paid {
+    background: #d1fae5;
+    color: #065f46;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+}
+
+.status-progress {
+    background: #fef3c7;
+    color: #92400e;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+}
+
+.status-sent {
+    background: #dbeafe;
+    color: #1e40af;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+}
+
+/* ===== EXTRA BLOCKS ===== */
+
+.info-card {
+    background: white;
+    border-radius: 18px;
+    padding: 25px;
+    box-shadow: 0 5px 20px rgba(0,0,0,.08);
+    height: 100%;
+}
+
+.info-card h5 {
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+
+.info-card ul {
+    padding-left: 18px;
+    margin: 0;
+}
+
+/* ===== RESPONSIVE ===== */
+
+@media (max-width: 768px) {
+
+    .sidebar {
+        min-height: auto;
+    }
+
+    .dashboard-banner {
+        padding: 25px;
+    }
+
+    .stat-number {
+        font-size: 1.6rem;
+    }
+
+}

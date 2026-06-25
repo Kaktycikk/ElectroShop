@@ -1,0 +1,21 @@
+# VS Code
+.vscode/
+
+# JetBrains
+.idea/
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# Mac
+.DS_Store
+
+# Logs
+*.log
+
+# Environment
+.env
+
+# Composer
+/vendor/
