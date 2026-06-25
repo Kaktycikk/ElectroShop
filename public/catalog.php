@@ -1,5 +1,7 @@
 <?php
 
+session_start();
+
 include __DIR__ . '/../includes/db.php';
 
 $title = 'Каталог товаров';

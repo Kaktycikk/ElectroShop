@@ -1,4 +1,5 @@
 <?php 
+session_start();
 include __DIR__ . '/../includes/db.php';
 
 $bestsellers = pg_query(

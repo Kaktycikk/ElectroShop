@@ -1,10 +1,5 @@
 <?php
 
-if (session_status() === PHP_SESSION_NONE)
-{
-    session_start();
-}
-
 $currentPage = basename($_SERVER['PHP_SELF']);
 
 ?>
@@ -28,7 +23,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
           href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
     <link rel="stylesheet"
-          href="css/site.css">
+          href="/../public/css/site.css">
 
 </head>
 
