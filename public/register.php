@@ -16,7 +16,7 @@ if (isset($_SESSION["user_id"]))
 
 session_start();
 
-include 'includes/db.php';
+include __DIR__ . '/../includes/db.php';
 
 $error = "";
 
@@ -94,7 +94,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST")
 
 ?>
 
-<?php include 'includes/site_header.php'; ?>
+<?php include __DIR__ . '/../includes/site_header.php'; ?>
 
 <section class="auth-section">
 
@@ -251,4 +251,4 @@ if ($_SERVER["REQUEST_METHOD"] == "POST")
 
 </section>
 
-<?php include 'includes/site_footer.php'; ?>
+<?php include __DIR__ . '/../includes/site_footer.php'; ?>

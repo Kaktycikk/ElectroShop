@@ -1,4 +1,4 @@
-<?php include 'includes/site_header.php'; ?>
+<?php include __DIR__ . '/../includes/site_header.php'; ?>
 
 <!-- Баннер -->
 
@@ -267,4 +267,4 @@
 
 </section>
 
-<?php include 'includes/site_footer.php'; ?>
+<?php include __DIR__ . '/../includes/site_footer.php'; ?>

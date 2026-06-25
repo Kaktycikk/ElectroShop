@@ -8,8 +8,8 @@ if (!isset($_SESSION["user_id"]))
     exit;
 }
 
-include "includes/db.php";
-include "includes/site_header.php";
+include __DIR__ . '/../includes/db.php';
+include __DIR__ . '/../"includes/site_header.php';
 
 $id = (int)$_GET["id"];
 
@@ -211,4 +211,4 @@ while ($row = pg_fetch_assoc($result))
 
 </section>
 
-<?php include "includes/site_footer.php"; ?>
+<?php include __DIR__ . '/../includes/site_footer.php'; ?>

@@ -47,8 +47,8 @@ if (isset($_GET["action"]) && isset($_GET["id"]))
 }
 
 
-include 'includes/db.php';
-include 'includes/site_header.php';
+include __DIR__ . '/../includes/db.php';
+include __DIR__ . '/../includes/site_header.php';
 
 $cart = $_SESSION['cart'] ?? [];
 
@@ -350,4 +350,4 @@ $total = 0;
 
 </section>
 
-<?php include 'includes/site_footer.php'; ?>
+<?php include __DIR__ . '/../includes/site_footer.php'; ?>

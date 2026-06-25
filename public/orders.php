@@ -8,8 +8,8 @@ if (!isset($_SESSION["user_id"]))
     exit;
 }
 
-include "includes/db.php";
-include "includes/site_header.php";
+include __DIR__ . '/../includes/db.php';
+include __DIR__ . '/../includes/site_header.php';
 
 $result = pg_query_params(
     $conn,
@@ -118,4 +118,4 @@ $result = pg_query_params(
 
 </section>
 
-<?php include "includes/site_footer.php"; ?>
+<?php include __DIR__ . '/../includes/site_footer.php'; ?>

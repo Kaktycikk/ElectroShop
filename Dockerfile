@@ -5,3 +5,5 @@ RUN install-php-extensions pgsql pdo_pgsql
 WORKDIR /app
 
 COPY . /app
+
+ENV SERVER_ROOT=/app/public

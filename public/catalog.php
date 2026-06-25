@@ -1,6 +1,6 @@
 <?php
 
-include 'includes/db.php';
+include __DIR__ . '/../includes/db.php';
 
 $title = 'Каталог товаров';
 
@@ -40,7 +40,7 @@ else
     );
 }
 
-include 'includes/site_header.php';
+include __DIR__ . '/../includes/site_header.php';
 
 ?>
 
@@ -214,4 +214,4 @@ include 'includes/site_header.php';
 
 </section>
 
-<?php include 'includes/site_footer.php'; ?>
+<?php include __DIR__ . '/../includes/site_footer.php'; ?>

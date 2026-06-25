@@ -8,7 +8,7 @@ if (!isset($_SESSION["user_id"]))
     exit;
 }
 
-include "includes/db.php";
+include __DIR__ . '/../includes/db.php';
 
 $cart = $_SESSION["cart"] ?? [];
 
@@ -151,7 +151,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST")
     exit;
 }
 
-include "includes/site_header.php";
+include __DIR__ . '/../includes/site_header.php';
 
 ?>
 
@@ -329,4 +329,4 @@ include "includes/site_header.php";
 
 </section>
 
-<?php include "includes/site_footer.php"; ?>
+<?php include __DIR__ . '/../includes/site_footer.php'; ?>

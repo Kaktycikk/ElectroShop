@@ -1,5 +1,5 @@
 <?php 
-include 'includes/db.php';
+include __DIR__ . '/../includes/db.php';
 
 $bestsellers = pg_query(
     $conn,
@@ -7,7 +7,7 @@ $bestsellers = pg_query(
 );
 ?>
 
-<?php include 'includes/site_header.php'; ?>
+<?php include __DIR__ . '/../includes/site_header.php'; ?>
 
 <!-- Главный экран -->
 
@@ -426,4 +426,4 @@ $bestsellers = pg_query(
 
 </section>
 
-<?php include 'includes/site_footer.php'; ?>
+<?php include __DIR__ . '/../includes/site_footer.php'; ?>
