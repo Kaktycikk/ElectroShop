@@ -1,9 +1,5 @@
 <?php
 
-var_dump(getenv("PGHOST"));
-var_dump(getenv("PGDATABASE"));
-die();
-
 $conn = pg_connect(
     "host=" . getenv("PGHOST") .
     " port=" . getenv("PGPORT") .
