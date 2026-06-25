@@ -4,6 +4,9 @@ RUN install-php-extensions pgsql pdo_pgsql
 
 WORKDIR /app
 
-COPY . /app
+COPY . .
 
 ENV SERVER_ROOT=/app/public
+ENV SERVER_NAME=:${PORT}
+
+EXPOSE 8080
