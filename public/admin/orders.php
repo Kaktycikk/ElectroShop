@@ -27,7 +27,7 @@ $orders = [
     ]
 ];
 
-include __DIR__ . '/../includes/admin_header.php';
+include __DIR__ . '/../../includes/admin_header.php';
 
 ?>
 
@@ -35,7 +35,7 @@ include __DIR__ . '/../includes/admin_header.php';
 
     <div class="row">
 
-        <?php include __DIR__ . '/../includes/sidebar.php'; ?>
+        <?php include __DIR__ . '/../../includes/sidebar.php'; ?>
 
         <div class="col-md-10 main-content">
 
@@ -202,4 +202,4 @@ include __DIR__ . '/../includes/admin_header.php';
 
 </div>
 
-<?php include __DIR__ . '/../includes/admin_footer.php'; ?>
+<?php include __DIR__ . '/../../includes/admin_footer.php'; ?>
