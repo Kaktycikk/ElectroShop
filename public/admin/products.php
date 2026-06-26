@@ -1,5 +1,4 @@
 <?php
-include __DIR__ . '/../../includes/admin_header.php';
 include __DIR__ . '/../../includes/db.php';
 
 $categories = pg_query(
