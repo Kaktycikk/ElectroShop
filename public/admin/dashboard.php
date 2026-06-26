@@ -1,8 +1,5 @@
-
-<?php include __DIR__ . '/../../includes/admin_header.php'; ?>
-
 <?php
-
+    include __DIR__ . '/../../includes/admin_header.php'; 
     include __DIR__ . '/../../includes/db.php';
 
     $productsCount = pg_fetch_result(
