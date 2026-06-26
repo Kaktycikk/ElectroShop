@@ -1,5 +1,4 @@
 <?php
-
 include __DIR__ . '/../../includes/admin_header.php';
 include __DIR__ . '/../../includes/db.php';
 
@@ -205,6 +204,8 @@ if (isset($_POST["delete_product"]))
     header("Location: products.php");
     exit;
 }
+
+include __DIR__ . '/../../includes/admin_header.php';
 
 $search = $_GET["search"] ?? "";
 $category = $_GET["category"] ?? "all";
