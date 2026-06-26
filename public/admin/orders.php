@@ -1,7 +1,5 @@
 <?php
 
-include __DIR__ . '/../../includes/admin_header.php';
-
 include __DIR__ . '/../../includes/db.php';
 
 if ($_SERVER["REQUEST_METHOD"] === "POST")
@@ -23,6 +21,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST")
     header("Location: orders.php");
     exit;
 }
+
+include __DIR__ . '/../../includes/admin_header.php';
 
 $editOrderId = isset($_GET["edit"]) ? (int)$_GET["edit"] : null;
 
