@@ -1,30 +1,262 @@
 <?php
 
-$products = [
-    [
-        'id' => 1,
-        'name' => 'iPhone 16 Pro',
-        'category' => 'Смартфоны',
-        'price' => '89 990 ₽',
-        'stock' => 14
-    ],
-    [
-        'id' => 2,
-        'name' => 'RTX 5070',
-        'category' => 'Видеокарты',
-        'price' => '75 990 ₽',
-        'stock' => 8
-    ],
-    [
-        'id' => 3,
-        'name' => 'MacBook Air M5',
-        'category' => 'Ноутбуки',
-        'price' => '119 990 ₽',
-        'stock' => 5
-    ]
-];
-
 include __DIR__ . '/../../includes/admin_header.php';
+include __DIR__ . '/../../includes/db.php';
+
+$categories = pg_query(
+    $conn,
+    "SELECT id, name
+     FROM categories
+     ORDER BY name"
+);
+
+$categoryList = [];
+
+while ($cat = pg_fetch_assoc($categories))
+{
+    $categoryList[] = $cat;
+}
+
+if (isset($_POST["add_product"]))
+{
+    $name = trim($_POST["name"]);
+    $brand = trim($_POST["brand"]);
+    $category = (int)$_POST["category_id"];
+    $description = trim($_POST["description"]);
+    $price = (float)$_POST["price"];
+    $stock = (int)$_POST["stock"];
+
+    $imageName = null;
+
+    if (!empty($_FILES["image"]["name"]))
+    {
+        $extension = pathinfo(
+            $_FILES["image"]["name"],
+            PATHINFO_EXTENSION
+        );
+
+        $allowed = ["jpg", "jpeg", "png", "webp"];
+
+        if (!in_array(strtolower($extension), $allowed))
+        {
+            die("Можно загружать только JPG, PNG или WEBP.");
+        }
+
+        $imageName =
+            time() .
+            "_" .
+            basename($_FILES["image"]["name"]);
+
+        if (!move_uploaded_file(
+            $_FILES["image"]["tmp_name"],
+            __DIR__ . "/../img/products/" . $imageName
+        ))
+        {
+            die("Не удалось загрузить изображение.");
+        }
+    }
+
+    $result = pg_query_params(
+        $conn,
+        "
+        INSERT INTO products
+        (
+            name,
+            brand,
+            description,
+            image,
+            category_id,
+            price,
+            stock
+        )
+        VALUES
+        (
+            $1,$2,$3,$4,$5,$6,$7
+        )
+        ",
+        [
+            $name,
+            $brand,
+            $description,
+            $imageName,
+            $category,
+            $price,
+            $stock
+        ]
+    );
+
+    if (!$result)
+    {
+        die(pg_last_error($conn));
+    }
+
+    header("Location: products.php");
+    exit;
+}
+
+if (isset($_POST["edit_product"]))
+{
+    $productId = (int)$_POST["product_id"];
+
+    $name = trim($_POST["name"]);
+    $brand = trim($_POST["brand"]);
+    $category = (int)$_POST["category_id"];
+    $description = trim($_POST["description"]);
+    $price = (float)$_POST["price"];
+    $stock = (int)$_POST["stock"];
+
+    // Получаем текущее изображение товара
+    $oldProduct = pg_fetch_assoc(
+        pg_query_params(
+            $conn,
+            "SELECT image
+             FROM products
+             WHERE id = $1",
+            [$productId]
+        )
+    );
+
+    $imageName = $oldProduct["image"];
+
+    // Если выбрали новую картинку
+    if (!empty($_FILES["image"]["name"]))
+    {
+        $extension = strtolower(
+            pathinfo(
+                $_FILES["image"]["name"],
+                PATHINFO_EXTENSION
+            )
+        );
+
+        $allowed = ["jpg", "jpeg", "png", "webp"];
+
+        if (!in_array($extension, $allowed))
+        {
+            die("Можно загружать только JPG, PNG или WEBP.");
+        }
+
+        $imageName =
+            time() .
+            "_" .
+            basename($_FILES["image"]["name"]);
+
+        if (!move_uploaded_file(
+            $_FILES["image"]["tmp_name"],
+            __DIR__ . "/../img/products/" . $imageName
+        ))
+        {
+            die("Не удалось загрузить изображение.");
+        }
+    }
+
+    $result = pg_query_params(
+        $conn,
+        "
+        UPDATE products
+        SET
+            name = $1,
+            brand = $2,
+            description = $3,
+            image = $4,
+            category_id = $5,
+            price = $6,
+            stock = $7
+        WHERE id = $8
+        ",
+        [
+            $name,
+            $brand,
+            $description,
+            $imageName,
+            $category,
+            $price,
+            $stock,
+            $productId
+        ]
+    );
+
+    if (!$result)
+    {
+        die(pg_last_error($conn));
+    }
+
+    header("Location: products.php");
+    exit;
+}
+
+if (isset($_POST["delete_product"]))
+{
+    $productId = (int)$_POST["product_id"];
+
+    $result = pg_query_params(
+        $conn,
+        "
+        DELETE FROM products
+        WHERE id = $1
+        ",
+        [$productId]
+    );
+
+    if (!$result)
+    {
+        die(pg_last_error($conn));
+    }
+
+    header("Location: products.php");
+    exit;
+}
+
+$search = $_GET["search"] ?? "";
+$category = $_GET["category"] ?? "all";
+
+$sql = "
+    SELECT
+        products.id,
+        products.name,
+        products.brand,
+        products.description,
+        products.image,
+        categories.id AS category_id,
+        categories.name AS category,
+        products.price,
+        products.stock
+    FROM products
+    JOIN categories
+        ON categories.id = products.category_id
+    WHERE 1=1
+    ";
+
+$params = [];
+$index = 1;
+
+if ($search !== "")
+{
+    $sql .= "
+        AND (
+            LOWER(products.name) LIKE LOWER($" . $index . ")
+            OR LOWER(products.brand) LIKE LOWER($" . $index . ")
+        )
+    ";
+
+    $params[] = "%" . $search . "%";
+    $index++;
+}
+
+if ($category !== "all")
+{
+    $sql .= " AND categories.id = $" . $index;
+    $params[] = $category;
+    $index++;
+}
+
+$sql .= " ORDER BY products.id";
+
+$products = pg_query_params($conn, $sql, $params);
+
+if (!$products)
+{
+    die(pg_last_error($conn));
+}
 
 ?>
 
@@ -41,20 +273,72 @@ include __DIR__ . '/../../includes/admin_header.php';
                 <p>Управление каталогом интернет-магазина</p>
             </div>
 
-            <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="d-flex align-items-center mb-4 gap-3">
 
-                <h3>Список товаров</h3>
+                <h3 class="mb-0 me-3">
+                    Список товаров
+                </h3>
+
+                <form
+                    method="GET"
+                    class="d-flex align-items-center gap-3 flex-grow-1">
+
+                    <input
+                        type="text"
+                        name="search"
+                        class="form-control"
+                        style="max-width:450px;"
+                        placeholder="Поиск товара..."
+                        value="<?= htmlspecialchars($search) ?>">
+
+                    <select
+                        class="form-select"
+                        name="category">
+
+                        <option
+                            value="all"
+                            <?= $category === "all" ? "selected" : "" ?>>
+                            Все категории
+                        </option>
+
+                        <?php foreach ($categoryList as $cat): ?>
+
+                            <option
+                                value="<?= $cat["id"] ?>"
+                                <?= ($category == $cat["id"]) ? "selected" : "" ?>>
+
+                                <?= htmlspecialchars($cat["name"]) ?>
+
+                            </option>
+
+                        <?php endforeach; ?>
+
+                    </select>
+
+                    <button
+                        type="submit"
+                        class="edit-btn">
+
+                        <i class="bi bi-search"></i>
+
+                    </button>
+
+                </form>
 
                 <button
-                    class="btn btn-warning"
+                    class="add-btn"
+                    type="button"
                     data-bs-toggle="modal"
                     data-bs-target="#addProductModal">
+
+                    <i class="bi bi-plus-lg me-2"></i>
 
                     Добавить товар
 
                 </button>
 
             </div>
+           
 
             <div class="table-wrapper">
 
@@ -62,8 +346,9 @@ include __DIR__ . '/../../includes/admin_header.php';
 
                     <thead>
                         <tr>
-                            <th>ID</th>
+                            <th>Фото</th>
                             <th>Название</th>
+                            <th>Бренд</th>
                             <th>Категория</th>
                             <th>Цена</th>
                             <th>Остаток</th>
@@ -73,45 +358,81 @@ include __DIR__ . '/../../includes/admin_header.php';
 
                     <tbody>
 
-<?php foreach ($products as $product): ?>
+<?php while ($product = pg_fetch_assoc($products)): ?>
 
 <tr>
 
-    <td><?= $product['id']; ?></td>
+    <td>
+        <?php if ($product["image"]): ?>
 
-    <td><?= $product['name']; ?></td>
+            <img
+            src="/img/products/<?= htmlspecialchars($product["image"]) ?>"
+            alt=""
+            style="
+                width:72px;
+                height:72px;
+                object-fit:contain;
+                border-radius:10px;
+                background:#fff;
+                padding:4px;
+            ">
 
-    <td><?= $product['category']; ?></td>
+        <?php endif; ?>
+    </td>
 
-    <td><?= $product['price']; ?></td>
+    <td><?= htmlspecialchars($product["name"]) ?></td>
+
+    <td><?= htmlspecialchars($product["brand"]) ?></td>
+
+    <td><?= htmlspecialchars($product["category"]) ?></td>
+
+    <td><?= number_format($product["price"], 0, ",", " ") ?> ₽</td>
 
     <td><?= $product['stock']; ?></td>
 
     <td>
 
-        <button
-            class="btn btn-sm btn-warning"
-            data-bs-toggle="modal"
-            data-bs-target="#editProductModal">
+        <div class="table-actions">
 
-            <i class="bi bi-pencil"></i>
+            <button
+                class="edit-btn edit-product-btn"
 
-        </button>
+                data-id="<?= $product["id"] ?>"
+                data-name="<?= htmlspecialchars($product["name"]) ?>"
+                data-brand="<?= htmlspecialchars($product["brand"]) ?>"
+                data-category="<?= $product["category_id"] ?>"
+                data-description="<?= htmlspecialchars($product["description"]) ?>"
+                data-price="<?= $product["price"] ?>"
+                data-stock="<?= $product["stock"] ?>"
+                data-image="<?= htmlspecialchars($product["image"]) ?>"
 
-        <button
-            class="btn btn-sm btn-danger"
-            data-bs-toggle="modal"
-            data-bs-target="#deleteProductModal">
+                data-bs-toggle="modal"
+                data-bs-target="#editProductModal">
 
-            <i class="bi bi-trash"></i>
+                <i class="bi bi-pencil-fill"></i>
 
-        </button>
+            </button>
+
+            <button
+                class="delete-btn delete-product-btn"
+
+                data-id="<?= $product["id"] ?>"
+                data-name="<?= htmlspecialchars($product["name"]) ?>"
+
+                data-bs-toggle="modal"
+                data-bs-target="#deleteProductModal">
+
+                <i class="bi bi-x-lg"></i>
+
+            </button>
+
+        </div>
 
     </td>
 
 </tr>
 
-<?php endforeach; ?>
+<?php endwhile; ?>
 
 </tbody>
 
@@ -149,7 +470,9 @@ include __DIR__ . '/../../includes/admin_header.php';
 
             <div class="modal-body">
 
-                <form>
+                <form 
+                method="POST"
+                enctype="multipart/form-data">
 
                     <div class="mb-3">
 
@@ -159,7 +482,23 @@ include __DIR__ . '/../../includes/admin_header.php';
 
                         <input
                             type="text"
-                            class="form-control">
+                            name="name"
+                            class="form-control"
+                            required>
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            Бренд
+                        </label>
+
+                        <input
+                            type="text"
+                            name="brand"
+                            class="form-control"
+                            required>
 
                     </div>
 
@@ -169,14 +508,48 @@ include __DIR__ . '/../../includes/admin_header.php';
                             Категория
                         </label>
 
-                        <select class="form-select">
+                        <select class="form-select"
+                            name="category_id">
 
-                            <option>Смартфоны</option>
-                            <option>Ноутбуки</option>
-                            <option>Мониторы</option>
-                            <option>Видеокарты</option>
+                            <?php foreach ($categoryList as $cat): ?>
+
+                                <option value="<?= $cat["id"] ?>">
+
+                                    <?= htmlspecialchars($cat["name"]) ?>
+
+                                </option>
+
+                            <?php endforeach; ?>
 
                         </select>
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            Изображение
+                        </label>
+
+                        <input
+                            type="file"
+                            class="form-control"
+                            name="image"
+                            accept="image/*">
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            Описание
+                        </label>
+
+                        <textarea
+                            class="form-control"
+                            rows="4"
+                            name="description">
+                        </textarea>
 
                     </div>
 
@@ -188,6 +561,7 @@ include __DIR__ . '/../../includes/admin_header.php';
 
                         <input
                             type="number"
+                            name="price"
                             class="form-control">
 
                     </div>
@@ -199,33 +573,42 @@ include __DIR__ . '/../../includes/admin_header.php';
                         </label>
 
                         <input
+                            name="stock"
                             type="number"
                             class="form-control">
 
                     </div>
+                
+                    <div class="modal-footer">
+
+                        <button
+                            type="button"
+                            class="btn btn-modal-cancel"
+                            data-bs-dismiss="modal">
+
+                            <i class="bi bi-x-lg me-2"></i>
+                            Отмена
+
+                        </button>
+
+                        <button
+                            type="submit"
+                            name="add_product"
+                            class="btn btn-modal-save">
+
+                            <i class="bi bi-check-lg me-2"></i>
+                            Сохранить
+
+                        </button>
+
+                    </div>
+
 
                 </form>
 
             </div>
 
-            <div class="modal-footer">
-
-                <button
-                    class="btn btn-secondary"
-                    data-bs-dismiss="modal">
-
-                    Отмена
-
-                </button>
-
-                <button class="btn btn-warning">
-
-                    Сохранить
-
-                </button>
-
-            </div>
-
+            
         </div>
 
     </div>
@@ -256,7 +639,14 @@ include __DIR__ . '/../../includes/admin_header.php';
 
             <div class="modal-body">
 
-                <form>
+                <form
+                    method="POST"
+                    enctype="multipart/form-data">
+
+                    <input
+                        type="hidden"
+                        name="product_id"
+                        id="editProductId">
 
                     <div class="mb-3">
 
@@ -267,7 +657,22 @@ include __DIR__ . '/../../includes/admin_header.php';
                         <input
                             type="text"
                             class="form-control"
-                            value="iPhone 16 Pro">
+                            id="editName"
+                            name="name">
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            Бренд
+                        </label>
+
+                        <input
+                            type="text"
+                            class="form-control"
+                            id="editBrand"
+                            name="brand">
 
                     </div>
 
@@ -277,25 +682,80 @@ include __DIR__ . '/../../includes/admin_header.php';
                             Категория
                         </label>
 
-                        <select class="form-select">
+                        <select
+                            class="form-select"
+                            id="editCategory"
+                            name="category_id">
 
-                            <option selected>
-                                Смартфоны
-                            </option>
+                            <?php foreach ($categoryList as $cat): ?>
 
-                            <option>
-                                Ноутбуки
-                            </option>
+                                <option value="<?= $cat["id"] ?>">
 
-                            <option>
-                                Мониторы
-                            </option>
+                                    <?= htmlspecialchars($cat["name"]) ?>
 
-                            <option>
-                                Видеокарты
-                            </option>
+                                </option>
+
+                            <?php endforeach; ?>
 
                         </select>
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+
+                            Новое изображение
+
+                        </label>
+
+                        <input
+                            type="file"
+                            class="form-control"
+                            id="editImage"
+                            name="image"
+                            accept="image/*">
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            Текущее изображение
+                        </label>
+
+                        <div class="text-center">
+
+                            <img
+                                id="editPreview"
+                                src=""
+                                alt="Изображение товара"
+                                style="
+                                    width:120px;
+                                    height:120px;
+                                    object-fit:contain;
+                                    border:1px solid #dee2e6;
+                                    border-radius:12px;
+                                    background:#fff;
+                                    padding:6px;
+                                ">
+
+                        </div>
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            Описание
+                        </label>
+
+                        <textarea
+                            class="form-control"
+                            rows="4"
+                            id="editDescription"
+                            name="description">
+                        </textarea>
 
                     </div>
 
@@ -308,7 +768,8 @@ include __DIR__ . '/../../includes/admin_header.php';
                         <input
                             type="number"
                             class="form-control"
-                            value="89990">
+                            id="editPrice"
+                            name="price">
 
                     </div>
 
@@ -321,29 +782,36 @@ include __DIR__ . '/../../includes/admin_header.php';
                         <input
                             type="number"
                             class="form-control"
-                            value="14">
+                            id="editStock"
+                            name="stock">
+
+                    </div>
+
+                    <div class="modal-footer">
+
+                        <button
+                            type="button"
+                            class="btn btn-modal-cancel"
+                            data-bs-dismiss="modal">
+
+                            <i class="bi bi-x-lg me-2"></i>
+                            Отмена
+
+                        </button>
+
+                        <button
+                            type="submit"
+                            name="edit_product"
+                            class="btn btn-modal-save">
+
+                            <i class="bi bi-check-lg me-2"></i>
+                            Сохранить
+
+                        </button>
 
                     </div>
 
                 </form>
-
-            </div>
-
-            <div class="modal-footer">
-
-                <button
-                    class="btn btn-secondary"
-                    data-bs-dismiss="modal">
-
-                    Отмена
-
-                </button>
-
-                <button class="btn btn-warning">
-
-                    Сохранить
-
-                </button>
 
             </div>
 
@@ -352,6 +820,7 @@ include __DIR__ . '/../../includes/admin_header.php';
     </div>
     
 </div>
+
 <!-- Удаление товара -->
 
 <div class="modal fade" id="deleteProductModal">
@@ -360,44 +829,72 @@ include __DIR__ . '/../../includes/admin_header.php';
 
         <div class="modal-content">
 
-            <div class="modal-header">
+            <form method="POST">
 
-                <h5 class="modal-title">
-                    Удаление товара
-                </h5>
+                <input
+                    type="hidden"
+                    id="deleteProductId"
+                    name="product_id">
 
-                <button
-                    type="button"
-                    class="btn-close"
-                    data-bs-dismiss="modal">
-                </button>
+                <div class="modal-header">
 
-            </div>
+                    <h5 class="modal-title">
+                        Удаление товара
+                    </h5>
 
-            <div class="modal-body">
+                    <button
+                        type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal">
+                    </button>
 
-                Вы действительно хотите удалить товар?
+                </div>
 
-            </div>
+                <div class="modal-body text-center">
 
-            <div class="modal-footer">
+                    <i class="bi bi-exclamation-triangle-fill text-danger fs-1 mb-3"></i>
 
-                <button
-                    class="btn btn-secondary"
-                    data-bs-dismiss="modal">
+                    <p class="mb-2">
 
-                    Отмена
+                        Вы действительно хотите удалить товар
 
-                </button>
+                    </p>
 
-                <button
-                    class="btn btn-danger">
+                    <h5 class="fw-bold text-dark mb-3"
+                        id="deleteProductName">
+                    </h5>
 
-                    Удалить
+                    <p class="delete-warning mb-0">
+                        Это действие нельзя отменить.
+                    </p>
 
-                </button>
+                </div>
 
-            </div>
+                <div class="modal-footer">
+
+                    <button
+                        type="button"
+                        class="btn btn-modal-cancel"
+                        data-bs-dismiss="modal">
+
+                        <i class="bi bi-x-lg me-2"></i>
+                        Отмена
+
+                    </button>
+
+                    <button
+                        type="submit"
+                        name="delete_product"
+                        class="btn btn-modal-delete">
+
+                        <i class="bi bi-trash3 me-2"></i>
+                        Удалить
+
+                    </button>
+
+                </div>
+
+            </form>
 
         </div>
 

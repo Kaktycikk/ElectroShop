@@ -1,6 +1,50 @@
 
 <?php include __DIR__ . '/../../includes/admin_header.php'; ?>
 
+<?php
+
+    include __DIR__ . '/../../includes/db.php';
+
+    $productsCount = pg_fetch_result(
+        pg_query($conn, "SELECT COUNT(*) FROM products"),
+        0,
+        0
+    );
+
+    $categoriesCount = pg_fetch_result(
+        pg_query($conn, "SELECT COUNT(*) FROM categories"),
+        0,
+        0
+    );
+
+    $usersCount = pg_fetch_result(
+        pg_query($conn, "SELECT COUNT(*) FROM users"),
+        0,
+        0
+    );
+
+    $ordersCount = pg_fetch_result(
+        pg_query($conn, "SELECT COUNT(*) FROM orders"),
+        0,
+        0
+    );
+
+    $orders = pg_query(
+        $conn,
+        "SELECT
+            orders.id,
+            users.name,
+            orders.total_price,
+            orders.status,
+            orders.created_at
+        FROM orders
+        JOIN users
+            ON users.id = orders.user_id
+        ORDER BY orders.created_at DESC
+        LIMIT 5"
+    );
+?>
+
 <div class="container-fluid">
 
     <div class="row">
@@ -22,38 +66,114 @@
             <div class="row g-4">
 
                 <div class="col-md-3">
-                    <div class="card shadow stat-card">
+                    <div class="card stat-card">
+
                         <div class="card-body">
-                            <h6>Товары</h6>
-                            <div class="stat-number">156</div>
+
+                            <div class="stat-top">
+
+                                <span class="stat-title">
+
+                                    Товары
+
+                                </span>
+
+                                <i class="bi bi-box-seam stat-icon"></i>
+
+                            </div>
+
+                            <div class="stat-number">
+
+                                <?= $productsCount ?>
+
+                            </div>
+
                         </div>
+
                     </div>
                 </div>
 
                 <div class="col-md-3">
-                    <div class="card shadow stat-card">
+                    <div class="card stat-card">
+
                         <div class="card-body">
-                            <h6>Категории</h6>
-                            <div class="stat-number">12</div>
+
+                            <div class="stat-top">
+
+                                <span class="stat-title">
+
+                                    Категории
+
+                                </span>
+
+                                <i class="bi bi-grid stat-icon"></i>
+
+                            </div>
+
+                            <div class="stat-number">
+
+                                <?= $categoriesCount ?>
+
+                            </div>
+
                         </div>
+
                     </div>
                 </div>
 
                 <div class="col-md-3">
-                    <div class="card shadow stat-card">
+                    <div class="card stat-card">
+
                         <div class="card-body">
-                            <h6>Пользователи</h6>
-                            <div class="stat-number">35</div>
+
+                            <div class="stat-top">
+
+                                <span class="stat-title">
+
+                                    Пользователи
+
+                                </span>
+
+                                <i class="bi bi-people stat-icon"></i>
+
+                            </div>
+
+                            <div class="stat-number">
+
+                                <?= $usersCount ?>
+
+                            </div>
+
                         </div>
+
                     </div>
                 </div>
 
                 <div class="col-md-3">
-                    <div class="card shadow stat-card">
+                    <div class="card stat-card">
+
                         <div class="card-body">
-                            <h6>Заказы</h6>
-                            <div class="stat-number">84</div>
+
+                            <div class="stat-top">
+
+                                <span class="stat-title">
+
+                                    Заказы
+
+                                </span>
+
+                                <i class="bi bi-bag-check stat-icon"></i>
+
+                            </div>
+
+                            <div class="stat-number">
+
+                                <?= $ordersCount ?>
+
+                            </div>
+
                         </div>
+
                     </div>
                 </div>
 
@@ -67,12 +187,13 @@
 
                 <div class="card-body">
 
-                    <table class="table">
+                    <table class="table table-hover align-middle">
 
                         <thead>
                             <tr>
                                 <th>№</th>
                                 <th>Клиент</th>
+                                <th>Дата</th>
                                 <th>Сумма</th>
                                 <th>Статус</th>
                             </tr>
@@ -80,28 +201,65 @@
 
                         <tbody>
 
-                            <tr>
-                                <td>1001</td>
-                                <td>Иван Иванов</td>
-                                <td>125 000 ₽</td>
-                                <td>Оплачен</td>
-                            </tr>
+                            <?php while ($order = pg_fetch_assoc($orders)): ?>
 
-                            <tr>
-                                <td>1002</td>
-                                <td>Петр Петров</td>
-                                <td>89 000 ₽</td>
-                                <td>В обработке</td>
-                            </tr>
+                                <?php
 
-                            <tr>
-                                <td>1003</td>
-                                <td>Анна Смирнова</td>
-                                <td>45 000 ₽</td>
-                                <td>Отправлен</td>
-                            </tr>
+                                    $statusClass = match ($order["status"])
+                                    {
+                                        "Новый" => "status-new",
+                                        "В обработке" => "status-processing",
+                                        "Отправлен" => "status-shipped",
+                                        "Доставлен" => "status-success",
+                                        "Отменён" => "status-danger",
+                                        "Отменен" => "status-danger",
+                                        default => "status-new"
+                                    };
 
-                        </tbody>
+                                ?>
+
+                                <tr class="order-row"
+                                    onclick="window.location.href='orders.php?edit=<?= $order["id"] ?>'">
+
+                                    <td>
+
+                                        #<?= $order["id"] ?>
+
+                                    </td>
+
+                                    <td>
+
+                                        <?= htmlspecialchars($order["name"]) ?>
+
+                                    </td>
+
+                                    <td>
+
+                                        <?= date("d.m.Y", strtotime($order["created_at"])) ?>
+
+                                    </td>
+
+                                    <td>
+
+                                        <?= number_format($order["total_price"], 0, ",", " ") ?> ₽
+
+                                    </td>
+
+                                    <td>
+
+                                        <span class="status-badge <?= $statusClass ?>">
+
+                                            <?= htmlspecialchars($order["status"]) ?>
+
+                                        </span>
+
+                                    </td>
+
+                                </tr>
+
+                                <?php endwhile; ?>
+
+                            </tbody>
 
                     </table>
 

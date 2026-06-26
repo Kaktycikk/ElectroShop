@@ -1,33 +1,44 @@
 <?php
 
-$orders = [
-    [
-        'id' => 1001,
-        'customer' => 'Иван Петров',
-        'product' => 'iPhone 16 Pro',
-        'amount' => '89 990 ₽',
-        'date' => '15.06.2026',
-        'status' => 'Новый'
-    ],
-    [
-        'id' => 1002,
-        'customer' => 'Анна Смирнова',
-        'product' => 'RTX 5070',
-        'amount' => '75 990 ₽',
-        'date' => '16.06.2026',
-        'status' => 'В обработке'
-    ],
-    [
-        'id' => 1003,
-        'customer' => 'Дмитрий Иванов',
-        'product' => 'MacBook Air M5',
-        'amount' => '119 990 ₽',
-        'date' => '17.06.2026',
-        'status' => 'Доставлен'
-    ]
-];
-
 include __DIR__ . '/../../includes/admin_header.php';
+
+include __DIR__ . '/../../includes/db.php';
+
+if ($_SERVER["REQUEST_METHOD"] === "POST")
+{
+    $orderId = (int)$_POST["order_id"];
+    $status = trim($_POST["status"]);
+
+    pg_query_params(
+        $conn,
+        "UPDATE orders
+         SET status = $1
+         WHERE id = $2",
+        array(
+            $status,
+            $orderId
+        )
+    );
+
+    header("Location: orders.php");
+    exit;
+}
+
+$editOrderId = isset($_GET["edit"]) ? (int)$_GET["edit"] : null;
+
+$orders = pg_query(
+    $conn,
+    "SELECT
+        orders.id,
+        users.name,
+        orders.total_price,
+        orders.status,
+        orders.created_at
+    FROM orders
+    JOIN users
+        ON users.id = orders.user_id
+    ORDER BY orders.created_at DESC"
+);
 
 ?>
 
@@ -51,7 +62,7 @@ include __DIR__ . '/../../includes/admin_header.php';
 
             <div class="table-wrapper">
 
-                <table class="table">
+                <table class="table table-hover align-middle">
 
                     <thead>
 
@@ -59,7 +70,6 @@ include __DIR__ . '/../../includes/admin_header.php';
 
                             <th>№ Заказа</th>
                             <th>Клиент</th>
-                            <th>Товар</th>
                             <th>Сумма</th>
                             <th>Дата</th>
                             <th>Статус</th>
@@ -71,30 +81,52 @@ include __DIR__ . '/../../includes/admin_header.php';
 
                     <tbody>
 
-                        <?php foreach ($orders as $order): ?>
+                        <?php while ($order = pg_fetch_assoc($orders)): ?>
+
+                            <?php
+
+                                    $statusClass = match ($order["status"])
+                                    {
+                                        "Новый" => "status-new",
+                                        "В обработке" => "status-processing",
+                                        "Отправлен" => "status-shipped",
+                                        "Доставлен" => "status-success",
+                                        "Отменён" => "status-danger",
+                                        "Отменен" => "status-danger",
+                                        default => "status-new"
+                                    };
+
+                                ?>
 
                         <tr>
 
                             <td>#<?= $order['id']; ?></td>
 
-                            <td><?= $order['customer']; ?></td>
+                            <td> <?= htmlspecialchars($order["name"]) ?></td>
 
-                            <td><?= $order['product']; ?></td>
+                            <td> <?= number_format($order["total_price"],0,","," ") ?> ₽</td>
 
-                            <td><?= $order['amount']; ?></td>
+                            <td> <?= date("d.m.Y", strtotime($order["created_at"])) ?></td>
 
-                            <td><?= $order['date']; ?></td>
-
-                            <td><?= $order['status']; ?></td>
+                            <td>
+                                <span class="status-badge <?= $statusClass ?>">
+                                    <?= htmlspecialchars($order["status"]) ?>
+                                </span>
+                            </td>
 
                             <td>
 
                                 <button
-                                    class="btn btn-sm btn-warning"
+                                    class="edit-btn edit-order-btn"
+
+                                    data-order="<?= $order["id"] ?>"
+                                    data-id="<?= $order["id"] ?>"
+                                    data-status="<?= htmlspecialchars($order["status"]) ?>"
+
                                     data-bs-toggle="modal"
                                     data-bs-target="#editOrderModal">
 
-                                    <i class="bi bi-pencil"></i>
+                                    <i class="bi bi-pencil-fill"></i>
 
                                 </button>
 
@@ -102,7 +134,7 @@ include __DIR__ . '/../../includes/admin_header.php';
 
                         </tr>
 
-                        <?php endforeach; ?>
+                        <?php endwhile; ?>
 
                     </tbody>
 
@@ -140,59 +172,74 @@ include __DIR__ . '/../../includes/admin_header.php';
 
             <div class="modal-body">
 
-                <form>
+                <form method="POST">
 
-                    <div class="mb-3">
+                    <input
+                        type="hidden"
+                        name="order_id"
+                        id="orderId">
 
-                        <label class="form-label">
-                            Статус заказа
-                        </label>
+                        <div class="mb-3">
 
-                        <select class="form-select">
+                            <label class="form-label">
+                                Статус заказа
+                            </label>
 
-                            <option selected>
-                                Новый
-                            </option>
+                            <select
+                            class="form-select"
+                            id="orderStatus"
+                            name="status">
 
-                            <option>
-                                В обработке
-                            </option>
+                                <option>
+                                    Новый
+                                </option>
 
-                            <option>
-                                Отправлен
-                            </option>
+                                <option>
+                                    В обработке
+                                </option>
 
-                            <option>
-                                Доставлен
-                            </option>
+                                <option>
+                                    Отправлен
+                                </option>
 
-                            <option>
-                                Отменён
-                            </option>
+                                <option>
+                                    Доставлен
+                                </option>
 
-                        </select>
+                                <option>
+                                    Отменён
+                                </option>
 
-                    </div>
+                            </select>
+
+                        </div>
+
+                        <div class="modal-footer border-0 pt-2">
+
+                            <button
+                                type="button"
+                                class="btn btn-modal-cancel"
+                                data-bs-dismiss="modal">
+
+                                <i class="bi bi-x-lg me-2"></i>
+
+                                Отмена
+
+                            </button>
+
+                            <button
+                                type="submit"
+                                class="btn btn-modal-save">
+
+                                <i class="bi bi-check-lg me-2"></i>
+
+                                Сохранить
+
+                            </button>
+
+                        </div>
 
                 </form>
-
-            </div>
-
-            <div class="modal-footer">
-
-                <button
-                    class="btn btn-secondary"
-                    data-bs-dismiss="modal">
-
-                    Отмена
-
-                </button>
-
-                <button class="btn btn-warning">
-
-                    Сохранить
-
-                </button>
 
             </div>
 

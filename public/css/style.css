@@ -5,34 +5,120 @@ body {
 
 /* ===== SIDEBAR ===== */
 
-.sidebar {
-    background: #1c2430;
-    min-height: 100vh;
-    padding: 25px 20px;
+.sidebar{
+    background:#1c2430;
+    min-height:100vh;
+    padding:24px 20px;
+    display:flex;
+    flex-direction:column;
+    border-right:1px solid rgba(255,255,255,.05);
 }
 
-.sidebar h4 {
-    color: white;
+/* ===== LOGO ===== */
+
+.sidebar-logo {
+    color: #fff;
+    font-size: 28px;
     font-weight: 700;
-    margin-bottom: 35px;
+    margin-bottom: 40px;
+}
+
+.sidebar-logo i {
+    color: #ff6b00;
+    margin-right: 8px;
+}
+
+/* ===== MENU ===== */
+
+.sidebar .nav {
+    flex: 1;
 }
 
 .sidebar .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
     color: #c7ced6;
+    font-size: 15px;
+    font-weight: 500;
+
     padding: 12px 15px;
     margin-bottom: 8px;
+
     border-radius: 10px;
-    transition: 0.3s;
+
+    transition: all .2s ease;
+}
+
+.sidebar .nav-link i {
+    width: 18px;
+    font-size: 17px;
 }
 
 .sidebar .nav-link:hover {
     background: #ff6b00;
-    color: white;
+    color: #fff;
+    transform: translateX(3px);
 }
 
 .sidebar .nav-link.active {
     background: #ff6b00;
-    color: white;
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(255,107,0,.35);
+}
+
+
+
+/* ===== DIVIDER ===== */
+
+.sidebar hr {
+    border-color: rgba(255,255,255,.08);
+    margin: 20px 0;
+}
+
+/* ===== ADMIN ===== */
+
+.admin-box {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.admin-avatar {
+    font-size: 36px;
+    color: #fff;
+}
+
+.admin-name {
+    color: #fff;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.admin-role {
+    color: #8f9aaa;
+    font-size: 13px;
+}
+
+/* ===== LOGOUT ===== */
+
+.btn-logout {
+    margin-top: 18px;
+
+    background: transparent;
+    border: none;
+
+    color: #c7ced6;
+    font-weight: 500;
+
+    transition: .2s;
+}
+
+.btn-logout:hover {
+    background: rgba(255,107,0,.15);
+    color: #ff6b00;
 }
 
 /* ===== MAIN CONTENT ===== */
@@ -40,6 +126,7 @@ body {
 .main-content {
     padding: 30px;
 }
+
 
 /* ===== HERO BLOCK ===== */
 
@@ -90,6 +177,240 @@ body {
     color: #ff6b00;
 }
 
+/* ===== DASHBOARD STATS ===== */
+
+.stat-card{
+    border:none;
+    border-radius:16px;
+    transition:.25s;
+    box-shadow:0 8px 24px rgba(0,0,0,.08);
+}
+
+.stat-card:hover{
+    transform:translateY(-5px);
+}
+
+.stat-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:18px;
+}
+
+.stat-title{
+    color:#7d8794;
+    font-size:15px;
+}
+
+.stat-icon{
+    font-size:26px;
+    color:#ff6b00;
+}
+
+.stat-number{
+    font-size:42px;
+    font-weight:700;
+    color:#ff6b00;
+}
+
+.status-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:7px 14px;
+    border-radius:50px;
+    font-size:13px;
+    font-weight:600;
+}
+
+.status-badge::before{
+    content:"";
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    background:currentColor;
+}
+
+.status-new{
+    background:#e0f2fe;
+    color:#0284c7;
+}
+
+.status-processing{
+    background:#fef3c7;
+    color:#b45309;
+}
+
+.status-shipped{
+    background:#ede9fe;
+    color:#6d28d9;
+}
+
+.status-success{
+    background:#dcfce7;
+    color:#15803d;
+}
+
+.status-danger{
+    background:#fee2e2;
+    color:#dc2626;
+}
+
+/* ===== Кнопка редактирования ===== */
+
+.edit-btn{
+    width:42px;
+    height:42px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    border:none;
+    border-radius:12px;
+
+    background:#fff5e8;
+    color:#ff6b00;
+
+    transition:.25s;
+}
+
+.edit-btn:hover{
+    background:#ff6b00;
+    color:#fff;
+
+    transform:translateY(-2px);
+    box-shadow:0 8px 20px rgba(255,107,0,.25);
+}
+
+.edit-btn:active{
+    transform:scale(.95);
+}
+
+.delete-btn{
+    width:42px;
+    height:42px;
+
+    border:none;
+    border-radius:12px;
+
+    background:#fdeaea;
+    color:#dc3545;
+
+    transition:.25s;
+
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+
+    margin-left:8px;
+}
+
+.delete-btn:hover{
+    background:#dc3545;
+    color:#fff;
+
+    transform:translateY(-2px);
+}
+
+.table-actions{
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
+.add-btn{
+    background:rgba(255,107,0,.12);
+    color:#ff6b00;
+
+    border:none;
+    border-radius:12px;
+
+    padding:10px 18px;
+
+    font-weight:600;
+
+    transition:.25s;
+}
+
+.add-btn:hover{
+    background:#ff6b00;
+    color:#fff;
+
+    transform:translateY(-2px);
+}
+
+/* ===== Кнопка удаления ===== */
+
+.btn-modal-delete{
+    background:#dc3545;
+    color:#fff;
+    border:none;
+    border-radius:12px;
+    padding:10px 24px;
+    font-weight:600;
+    transition:.25s;
+}
+
+.btn-modal-delete:hover{
+    background:#bb2d3b;
+    color:#fff;
+    transform:translateY(-2px);
+    box-shadow:0 8px 20px rgba(220,53,69,.3);
+}
+
+.delete-warning{
+    color:#dc3545;
+    font-size:14px;
+    font-weight:500;
+}
+
+/* ===== MODAL BUTTONS ===== */
+
+.btn-modal-save{
+    background:#ff6b00;
+    color:#fff;
+    border:none;
+    border-radius:12px;
+    padding:10px 24px;
+    font-weight:600;
+    transition:.25s;
+}
+
+.btn-modal-save:hover{
+    background:#e45f00;
+    color:#fff;
+    transform:translateY(-2px);
+    box-shadow:0 8px 20px rgba(255,107,0,.3);
+}
+
+.btn-modal-cancel{
+    background:#f4f6f9;
+    color:#495057;
+    border:none;
+    border-radius:12px;
+    padding:10px 24px;
+    font-weight:600;
+    transition:.25s;
+}
+
+.btn-modal-cancel:hover{
+    background:#e9ecef;
+    color:#212529;
+    transform:translateY(-2px);
+}
+
+#editPreview{
+    width:140px;
+    height:140px;
+    object-fit:contain;
+    background:#fff;
+    border:1px solid #dee2e6;
+    border-radius:14px;
+    padding:8px;
+    box-shadow:0 4px 12px rgba(0,0,0,.08);
+}
+
 /* ===== SECTION TITLES ===== */
 
 .section-title {
@@ -114,6 +435,8 @@ body {
 
 .table thead {
     background: #f8f9fb;
+    table-layout: fixed;
+    width:100%;
 }
 
 .table th {
