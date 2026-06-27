@@ -1,25 +1,143 @@
 <?php
 
-$users = [
-    [
-        'id' => 1,
-        'name' => 'Иван Петров',
-        'email' => 'ivan@mail.ru',
-        'role' => 'Администратор'
-    ],
-    [
-        'id' => 2,
-        'name' => 'Анна Смирнова',
-        'email' => 'anna@mail.ru',
-        'role' => 'Менеджер'
-    ],
-    [
-        'id' => 3,
-        'name' => 'Дмитрий Иванов',
-        'email' => 'dima@mail.ru',
-        'role' => 'Покупатель'
-    ]
-];
+session_start();
+include __DIR__ . '/../../includes/db.php';
+
+if (isset($_POST["edit_user"]))
+{
+    $userId = (int)$_POST["user_id"];
+
+    $name = trim($_POST["name"]);
+    $email = trim($_POST["email"]);
+
+    // Проверяем, не занят ли email
+    $exists = (int)pg_fetch_result(
+        pg_query_params(
+            $conn,
+            "
+            SELECT COUNT(*)
+            FROM users
+            WHERE LOWER(email) = LOWER($1)
+              AND id <> $2
+            ",
+            [
+                $email,
+                $userId
+            ]
+        ),
+        0,
+        0
+    );
+
+    if ($exists > 0)
+    {
+        $_SESSION["user_error"] =
+            "Пользователь с таким email уже существует.";
+
+        header("Location: users.php");
+        exit;
+    }
+
+    $result = pg_query_params(
+        $conn,
+        "
+        UPDATE users
+        SET
+            name = $1,
+            email = $2
+        WHERE id = $3
+        ",
+        [
+            $name,
+            $email,
+            $userId
+        ]
+    );
+
+    if (!$result)
+    {
+        die(pg_last_error($conn));
+    }
+
+    header("Location: users.php");
+    exit;
+}
+
+if (isset($_POST["delete_user"]))
+{
+    $userId = (int)$_POST["user_id"];
+
+    $result = pg_query_params(
+        $conn,
+        "
+        DELETE FROM users
+        WHERE id = $1
+        ",
+        [
+            $userId
+        ]
+    );
+
+    if (!$result)
+    {
+        die(pg_last_error($conn));
+    }
+
+    header("Location: users.php");
+    exit;
+}
+
+$search = trim($_GET["search"] ?? "");
+
+$sql = "
+    SELECT
+        id,
+        name,
+        email,
+        is_admin
+    FROM users
+    WHERE is_admin = FALSE
+    ";
+
+$params = [];
+$index = 1;
+
+if ($search !== "")
+{
+    $sql .= "
+        AND (
+            LOWER(name) LIKE LOWER($" . $index . ")
+            OR LOWER(email) LIKE LOWER($" . $index . ")
+        )
+    ";
+
+    $params[] = "%" . $search . "%";
+    $index++;
+}
+
+$sql .= "
+ORDER BY id
+";
+
+$users = pg_query_params(
+    $conn,
+    $sql,
+    $params
+);
+
+if (!$users)
+{
+    die(pg_last_error($conn));
+}
+
+if (!$users)
+{
+    die(pg_last_error($conn));
+}
+
+$error = $_SESSION["user_error"] ?? "";
+
+unset($_SESSION["user_error"]);
 
 include __DIR__ . '/../../includes/admin_header.php';
 
@@ -45,7 +163,28 @@ include __DIR__ . '/../../includes/admin_header.php';
 
             <div class="d-flex justify-content-between align-items-center mb-4">
 
-                <h3>Список пользователей</h3>
+                <form
+                    method="GET"
+                    class="d-flex"
+                    style="max-width:350px; width:100%;">
+
+                    <input
+                        type="text"
+                        class="form-control me-2"
+                        name="search"
+                        placeholder="Поиск пользователя..."
+
+                        value="<?= htmlspecialchars($search) ?>">
+
+                    <button
+                        type="submit"
+                        class="edit-btn">
+
+                        <i class="bi bi-search"></i>
+
+                    </button>
+
+                </form>
 
             </div>
 
@@ -60,7 +199,6 @@ include __DIR__ . '/../../includes/admin_header.php';
                             <th>ID</th>
                             <th>Имя</th>
                             <th>Email</th>
-                            <th>Роль</th>
                             <th>Действия</th>
 
                         </tr>
@@ -69,7 +207,7 @@ include __DIR__ . '/../../includes/admin_header.php';
 
                     <tbody>
 
-                        <?php foreach ($users as $user): ?>
+                        <?php while ($user = pg_fetch_assoc($users)): ?>
 
                         <tr>
 
@@ -79,33 +217,43 @@ include __DIR__ . '/../../includes/admin_header.php';
 
                             <td><?= $user['email']; ?></td>
 
-                            <td><?= $user['role']; ?></td>
-
                             <td>
 
-                                <button
-                                    class="btn btn-sm btn-warning"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#editUserModal">
+                                <div class="d-flex gap-2">
 
-                                    <i class="bi bi-pencil"></i>
+                                    <button
+                                        class="edit-btn edit-user-btn"
 
-                                </button>
+                                        data-id="<?= $user["id"] ?>"
+                                        data-name="<?= htmlspecialchars($user["name"]) ?>"
+                                        data-email="<?= htmlspecialchars($user["email"]) ?>"
 
-                                <button
-                                    class="btn btn-sm btn-danger"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#deleteUserModal">
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#editUserModal">
 
-                                    <i class="bi bi-trash"></i>
+                                        <i class="bi bi-pencil-fill"></i>
 
-                                </button>
+                                    </button>
 
+                                    <button
+                                        class="delete-btn delete-user-btn"
+
+                                        data-id="<?= $user["id"] ?>"
+                                        data-name="<?= htmlspecialchars($user["name"]) ?>"
+
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#deleteUserModal">
+
+                                        <i class="bi bi-x-lg"></i>
+
+                                    </button>
+
+                                </div>
                             </td>
 
                         </tr>
 
-                        <?php endforeach; ?>
+                        <?php endwhile; ?>
 
                     </tbody>
 
@@ -127,95 +275,106 @@ include __DIR__ . '/../../includes/admin_header.php';
 
         <div class="modal-content">
 
-            <div class="modal-header">
+            <form method="POST">
 
-                <h5 class="modal-title">
-                    Редактировать пользователя
-                </h5>
+                <input
+                    type="hidden"
+                    id="editUserId"
+                    name="user_id">
 
-                <button
-                    type="button"
-                    class="btn-close"
-                    data-bs-dismiss="modal">
-                </button>
+                <div class="modal-header">
 
-            </div>
+                    <h5 class="modal-title">
 
-            <div class="modal-body">
+                        Редактировать пользователя
 
-                <form>
+                    </h5>
+
+                    <button
+                        type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal">
+                    </button>
+
+                </div>
+
+                <div class="modal-body">
+
+                    <?php if (!empty($error)): ?>
+
+                    <div class="alert alert-danger">
+
+                        <i class="bi bi-exclamation-circle me-2"></i>
+
+                        <?= htmlspecialchars($error) ?>
+
+                    </div>
+
+                    <?php endif; ?>
 
                     <div class="mb-3">
 
                         <label class="form-label">
+
                             Имя
+
                         </label>
 
                         <input
                             type="text"
                             class="form-control"
-                            value="Иван Петров">
+                            id="editUserName"
+                            name="name"
+                            required>
 
                     </div>
 
                     <div class="mb-3">
 
                         <label class="form-label">
+
                             Email
+
                         </label>
 
                         <input
                             type="email"
                             class="form-control"
-                            value="ivan@mail.ru">
+                            id="editUserEmail"
+                            name="email"
+                            required>
 
                     </div>
 
-                    <div class="mb-3">
+                </div>
 
-                        <label class="form-label">
-                            Роль
-                        </label>
+                <div class="modal-footer">
 
-                        <select class="form-select">
+                    <button
+                        type="button"
+                        class="btn btn-modal-cancel"
+                        data-bs-dismiss="modal">
 
-                            <option selected>
-                                Администратор
-                            </option>
+                        <i class="bi bi-x-lg me-2"></i>
 
-                            <option>
-                                Менеджер
-                            </option>
+                        Отмена
 
-                            <option>
-                                Покупатель
-                            </option>
+                    </button>
 
-                        </select>
+                    <button
+                        type="submit"
+                        name="edit_user"
+                        class="btn btn-modal-save">
 
-                    </div>
+                        <i class="bi bi-check-lg me-2"></i>
 
-                </form>
+                        Сохранить
 
-            </div>
+                    </button>
 
-            <div class="modal-footer">
+                </div>
 
-                <button
-                    class="btn btn-secondary"
-                    data-bs-dismiss="modal">
-
-                    Отмена
-
-                </button>
-
-                <button class="btn btn-warning">
-
-                    Сохранить
-
-                </button>
-
-            </div>
+            </form>
 
         </div>
 
@@ -227,48 +386,67 @@ include __DIR__ . '/../../includes/admin_header.php';
 
 <div class="modal fade" id="deleteUserModal">
 
-    <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-dialog modal-dialog-centered">
 
         <div class="modal-content">
 
-            <div class="modal-header">
+            <form method="POST">
 
-                <h5 class="modal-title">
-                    Удаление пользователя
-                </h5>
+                <input
+                    type="hidden"
+                    id="deleteUserId"
+                    name="user_id">
 
-                <button
-                    type="button"
-                    class="btn-close"
-                    data-bs-dismiss="modal">
-                </button>
+                <div class="modal-header">
 
-            </div>
+                    <h5 class="modal-title">
 
-            <div class="modal-body">
+                        Удаление пользователя
 
-                Вы действительно хотите удалить пользователя?
+                    </h5>
 
-            </div>
+                    <button
+                        type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal">
+                    </button>
 
-            <div class="modal-footer">
+                </div>
 
-                <button
-                    class="btn btn-secondary"
-                    data-bs-dismiss="modal">
+                <div class="modal-body">
 
-                    Отмена
+                    Вы действительно хотите удалить пользователя
+                    <strong id="deleteUserName"></strong>?
 
-                </button>
+                </div>
 
-                <button
-                    class="btn btn-danger">
+                <div class="modal-footer d-flex justify-content-end gap-2">
 
-                    Удалить
+                    <button
+                        type="button"
+                        class="btn btn-modal-cancel"
+                        data-bs-dismiss="modal">
 
-                </button>
+                        <i class="bi bi-x-lg me-2"></i>
 
-            </div>
+                        Отмена
+
+                    </button>
+
+                    <button
+                        type="submit"
+                        name="delete_user"
+                        class="btn btn-modal-delete">
+
+                        <i class="bi bi-trash me-2"></i>
+
+                        Удалить
+
+                    </button>
+
+                </div>
+
+            </form>
 
         </div>
 
@@ -277,3 +455,19 @@ include __DIR__ . '/../../includes/admin_header.php';
 </div>
 
 <?php include __DIR__ . '/../../includes/admin_footer.php'; ?>
+
+<?php if (!empty($error)): ?>
+
+<script>
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    new bootstrap.Modal(
+        document.getElementById("editUserModal")
+    ).show();
+
+});
+
+</script>
+
+<?php endif; ?>

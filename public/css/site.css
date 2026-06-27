@@ -260,24 +260,25 @@ section h2
     background-color: #f1f3f5;
 }
 
-.product-card
-{
-    border: 1px solid #dcdcdc;
+.product-card{
 
-    border-radius: 12px;
+    border:none;
+    border-radius:18px;
 
-    overflow: hidden;
+    overflow:hidden;
 
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    transition:.25s;
 
-    transition: var(--transition);
+    box-shadow:0 5px 18px rgba(0,0,0,.08);
+
 }
 
-.product-card:hover
-{
-    border-color: var(--accent-color);
+.product-card:hover{
 
-    transform: translateY(-3px);
+    transform:translateY(-6px);
+
+    box-shadow:0 16px 35px rgba(0,0,0,.12);
+
 }
 
 .product-card img
@@ -287,7 +288,7 @@ section h2
 
     object-fit: contain;
 
-    padding: 15px;
+    padding: 18px;
 }
 
 .product-card h4
@@ -295,6 +296,7 @@ section h2
     color: #212529;
 
     font-weight: 700;
+    font-size:30px;
 }
 
 .bestsellers-section .card-img-top
@@ -882,6 +884,28 @@ section h2
     min-width: 140px;
 
     text-align: right;
+}
+
+/* ===== FILTER ===== */
+
+.filter-box{
+    background:#fff;
+    border-radius:18px;
+    padding:25px;
+    margin:35px 0 45px;
+    box-shadow:0 8px 25px rgba(0,0,0,.08);
+}
+
+.filter-box .form-control,
+.filter-box .form-select{
+    height:50px;
+    border-radius:12px;
+}
+
+.filter-box .btn{
+    height:50px;
+    border-radius:12px;
+    font-weight:600;
 }
 
 /* =========================
